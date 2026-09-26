@@ -1,0 +1,13 @@
+.DS_Store
+node_modules
+*.d.ts
+*.log
+_book
+cypress/screenshots
+.docusaurus
+.husky/_
+out
+dist/
+cypress/fixtures/*.js
+!cypress/fixtures/shadow-dom-fixture.js
+tests/**/package-lock.json

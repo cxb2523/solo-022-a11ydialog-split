@@ -1,0 +1,61 @@
+{
+  "name": "a11y-dialog",
+  "type": "module",
+  "version": "8.1.5",
+  "description": "A tiny script to make dialog windows accessible to assistive technology users.",
+  "homepage": "https://a11y-dialog.netlify.app/",
+  "license": "MIT",
+  "main": "dist/a11y-dialog.js",
+  "module": "dist/a11y-dialog.esm.js",
+  "types": "dist/a11y-dialog.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/a11y-dialog.esm.js",
+      "browser": "./dist/a11y-dialog.js",
+      "require": "./dist/a11y-dialog.cjs",
+      "types": "./dist/a11y-dialog.d.ts"
+    },
+    "./*": "./*"
+  },
+  "keywords": [
+    "modal",
+    "dialog",
+    "accessibility",
+    "a11y",
+    "focus"
+  ],
+  "author": "Kitty Giraudel (https://kittygiraudel.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KittyGiraudel/a11y-dialog"
+  },
+  "files": [
+    "dist/*"
+  ],
+  "scripts": {
+    "build": "tsc --outDir out && rollup -c",
+    "serve": "npx serve cypress/fixtures -p 5000",
+    "test": "cypress run --browser chrome",
+    "test:cjs": "npm install --prefix tests/cjs && npm test --prefix tests/cjs",
+    "test:esm": "npm install --prefix tests/esm && npm test --prefix tests/esm",
+    "test:package": "npm run test:cjs && npm run test:esm",
+    "size": "./size.sh",
+    "prepare": "husky",
+    "lint": "biome check --write --unsafe --no-errors-on-unmatched src/*.ts",
+    "lint:staged": "biome check --write --unsafe --staged --no-errors-on-unmatched src/**/*.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.1",
+    "@cypress/fiddle": "^1.19.3",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^1.0.0",
+    "cypress": "^15.5.0",
+    "cypress-real-events": "^1.7.6",
+    "husky": "^9.0.11",
+    "rollup": "^4.4.0",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "focusable-selectors": "^0.8.0"
+  }
+}
