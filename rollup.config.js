@@ -15,7 +15,13 @@ const BUILD_DIR = 'out'
 const copyDts = dest => ({
   name: 'copy-dts',
   writeBundle() {
-    for (const file of ['a11y-dialog.d.ts', 'dom-utils.d.ts', 'index.d.ts']) {
+    for (const file of [
+      'a11y-dialog.d.ts',
+      'aria.d.ts',
+      'dom-utils.d.ts',
+      'focus-trap.d.ts',
+      'index.d.ts',
+    ]) {
       cpSync(join(BUILD_DIR, file), join(dest, file))
     }
   },

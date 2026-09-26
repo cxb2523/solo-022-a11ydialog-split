@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretest": "npm run build --prefix ../..",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "a11y-dialog": "file:../..",
+    "jsdom": "^29.1.1"
+  }
+}

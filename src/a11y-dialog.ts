@@ -1,4 +1,16 @@
-import { closest, focus, getActiveEl, trapTabKey } from './dom-utils.js'
+import {
+  getClosestModal,
+  getDialogId,
+  initDialogAttributes,
+  isAlertDialog,
+  isDialogCloser,
+  isDialogOpener,
+  markDialogHidden,
+  markDialogShown,
+  SCOPE,
+} from './aria.js'
+import { closest, focus, getActiveEl } from './dom-utils.js'
+import { trapTabKey } from './focus-trap.js'
 
 /**
  * Names of the custom events emitted by an `A11yDialog` instance.
@@ -24,8 +36,6 @@ export type A11yDialogEvent = 'show' | 'hide' | 'destroy'
  * created with `new A11yDialog(...)`.
  */
 export type A11yDialogInstance = InstanceType<typeof A11yDialog>
-
-const SCOPE = 'data-a11y-dialog'
 
 /**
  * Controls an accessible modal dialog bound to a single DOM element.
@@ -71,7 +81,7 @@ export default class A11yDialog {
    */
   constructor(element: HTMLElement) {
     this.$el = element
-    this.id = this.$el.getAttribute(SCOPE) || this.$el.id
+    this.id = getDialogId(this.$el)
     this.previouslyFocused = null
     this.shown = false
 
@@ -82,13 +92,7 @@ export default class A11yDialog {
     this.show = this.show.bind(this)
     this.hide = this.hide.bind(this)
 
-    this.$el.setAttribute('aria-hidden', 'true')
-    this.$el.setAttribute('aria-modal', 'true')
-    this.$el.setAttribute('tabindex', '-1')
-
-    if (!this.$el.hasAttribute('role')) {
-      this.$el.setAttribute('role', 'dialog')
-    }
+    initDialogAttributes(this.$el)
 
     document.addEventListener('click', this.handleTriggerClicks, true)
   }
@@ -146,7 +150,7 @@ export default class A11yDialog {
     // Keep a reference to the currently focused element to be able to restore
     // it later
     this.shown = true
-    this.$el.removeAttribute('aria-hidden')
+    markDialogShown(this.$el)
     this.previouslyFocused = getActiveEl() as HTMLElement
 
     // Due to a long lasting bug in Safari, clicking an interactive element
@@ -202,7 +206,7 @@ export default class A11yDialog {
     if (hideEvent.defaultPrevented) return this
 
     this.shown = false
-    this.$el.setAttribute('aria-hidden', 'true')
+    markDialogHidden(this.$el)
 
     // Remove the focus event listener to the body element and stop listening
     // for specific key presses
@@ -270,19 +274,14 @@ export default class A11yDialog {
     // target
     // See: https://github.com/KittyGiraudel/a11y-dialog/issues/582
     const target = event.composedPath()[0] as HTMLElement
-    const opener = closest(`[${SCOPE}-show="${this.id}"]`, target)
-    const explicitCloser = closest(`[${SCOPE}-hide="${this.id}"]`, target)
-    const implicitCloser =
-      closest(`[${SCOPE}-hide]`, target) &&
-      closest('[aria-modal="true"]', target) === this.$el
 
     // We use `closest(..)` (instead of `matches(..)`) so that clicking an
     // element nested within a dialog opener does cause the dialog to open, and
     // we use our custom `closest(..)` function so that it can cross shadow
     // boundaries
     // See: https://github.com/KittyGiraudel/a11y-dialog/issues/712
-    if (opener) this.show(event)
-    if (explicitCloser || implicitCloser) this.hide(event)
+    if (isDialogOpener(target, this.id)) this.show(event)
+    if (isDialogCloser(target, this.id, this.$el)) this.hide(event)
   }
 
   /**
@@ -293,7 +292,7 @@ export default class A11yDialog {
     // This is an escape hatch in case there are nested open dialogs, so that
     // only the top most dialog gets interacted with (`closest` is basically
     // `Element.prototype.closest()` accounting for Shadow DOM subtrees)
-    if (closest('[aria-modal="true"]', getActiveEl()) !== this.$el) {
+    if (getClosestModal() !== this.$el) {
       return
     }
 
@@ -314,11 +313,7 @@ export default class A11yDialog {
     // effects from the ESC key and hide the dialog, unless:
     // - its role is `alertdialog`, which means it should be modal
     // - or it contains an open popover, in which case ESC should close it
-    if (
-      event.key === 'Escape' &&
-      this.$el.getAttribute('role') !== 'alertdialog' &&
-      !hasOpenPopover
-    ) {
+    if (event.key === 'Escape' && !isAlertDialog(this.$el) && !hasOpenPopover) {
       event.preventDefault()
       this.hide(event)
     }
